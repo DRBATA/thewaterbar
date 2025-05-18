@@ -1,23 +1,74 @@
 import Head from 'next/head';
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Home() {
-  const [hydrationLevel, setHydrationLevel] = useState(52);
-  const [drinks, setDrinks] = useState([
+  // State for all components
+  const [hydrationLevel, setHydrationLevel] = useState(70);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [logDrawerOpen, setLogDrawerOpen] = useState(false);
+  const [currentTab, setCurrentTab] = useState('home');
+  const [showAvatar, setShowAvatar] = useState(true);
+  const [chatMessages, setChatMessages] = useState([
+    { sender: 'ai', text: 'You\'re on track with your hydration today!' },
+    { sender: 'user', text: 'When should I have my next drink?' },
+    { sender: 'ai', text: 'Based on your activity level, I recommend 250ml of water in the next 30 minutes.' },
+  ]);
+  
+  // Reference for the video element
+  const videoRef = useRef(null);
+  
+  // Drinks data
+  const drinks = [
     { id: 1, type: 'Water', amount: '250 mL', color: 'bg-neon-blue', icon: '💧' },
     { id: 2, type: 'Sport Drink', amount: '330 mL', color: 'bg-neon-waterblue', icon: '🏃' },
-    { id: 3, type: 'Coconut Water', amount: '300 mL', color: 'bg-neon-green', icon: '🥥' },
-    { id: 4, type: 'Mineral Water', amount: '250 mL', color: 'bg-neon-pink', icon: '💎' },
-  ]);
+    { id: 3, type: 'Kombucha', amount: '300 mL', color: 'bg-neon-green', icon: '🍹' },
+    { id: 4, type: 'Matcha', amount: '250 mL', color: 'bg-neon-pink', icon: '🍵' },
+  ];
 
-  const addDrink = (drinkId) => {
-    // In a production app, this would update the database
+  // Card data for the center stack
+  const cards = [
+    { id: 1, title: 'Today\'s Plan', content: 'Drink 500ml water before noon. Consider an electrolyte beverage after your workout.' },
+    { id: 2, title: 'Electrolyte Gap', content: 'You\'re slightly low on potassium. Consider adding a banana or coconut water to your intake.' },
+    { id: 3, title: 'Partner Offer', content: 'Show this code at GreenFuel Café for a free Recovery Bowl: GF25HYDRATE', hasQR: true },
+  ];
+
+  // Function to log drink
+  const logDrink = (drinkId) => {
+    // In a production app, this would POST to /api/hydration/log
     setHydrationLevel(Math.min(hydrationLevel + 5, 100));
+    setLogDrawerOpen(false);
+    
+    // Trigger AI response after logging
+    setTimeout(() => {
+      setChatMessages([...chatMessages, 
+        { sender: 'ai', text: 'Great job! You\'ve increased your hydration to ' + (hydrationLevel + 5) + '%.' }
+      ]);
+      setChatOpen(true);
+      
+      // Play avatar video
+      if (videoRef.current) {
+        videoRef.current.play();
+      }
+    }, 1000);
+  };
+
+  // Function to send chat message
+  const sendChatMessage = (message) => {
+    if (!message.trim()) return;
+    
+    setChatMessages([...chatMessages, { sender: 'user', text: message }]);
+    
+    // Simulate AI response
+    setTimeout(() => {
+      setChatMessages(prev => [...prev, 
+        { sender: 'ai', text: 'I\'ll help you stay on track with your hydration goals!' }
+      ]);
+    }, 1000);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#001529] to-[#003145] text-white px-4 py-8">
+    <div className="min-h-screen bg-[#001020] text-white relative overflow-hidden">
       <Head>
         <title>The Water Bar</title>
         <meta name="description" content="Hydration tracking app" />
@@ -25,147 +76,229 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="max-w-md mx-auto">
-        {/* Logo and Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
-        >
-          <div className="w-16 h-16 mx-auto mb-2">
-            <svg viewBox="0 0 100 100" className="w-full h-full text-neon-blue">
-              <motion.path
-                d="M50 10 L90 90 L10 90 Z"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="3"
-                initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: 1 }}
-                transition={{ duration: 1.5, ease: "easeInOut" }}
-                className="drop-shadow-[0_0_8px_rgba(0,229,255,0.8)]"
-              />
-            </svg>
-          </div>
-          <h1 className="text-3xl font-bold text-neon-blue drop-shadow-[0_0_8px_rgba(0,229,255,0.8)]">
+      <main className="h-screen flex flex-col">
+        {/* Top Header with Logo */}
+        <div className="border border-neon-blue/30 bg-black/40 backdrop-blur-sm rounded-lg m-3 p-3 shadow-neon-glow">
+          <h1 className="text-2xl font-bold text-neon-blue drop-shadow-[0_0_8px_rgba(0,229,255,0.8)] text-center">
             WATER BAR
           </h1>
-        </motion.div>
-
-        {/* Hydration Level Card */}
-        <motion.div 
-          className="neon-card p-5 mb-6"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          <div className="flex items-center mb-2">
-            <span className="text-neon-blue mr-2">💧</span>
-            <h2 className="text-neon-blue font-semibold">Hydration Level</h2>
-            <span className="ml-auto text-neon-blue font-bold">{hydrationLevel}%</span>
-          </div>
-          
-          <div className="h-8 bg-gray-800/50 rounded-lg overflow-hidden mb-2">
-            <div 
-              className="h-full bg-gradient-to-r from-neon-blue to-neon-cyan relative"
-              style={{ width: `${hydrationLevel}%` }}
-            >
-              <div className="absolute top-0 left-0 w-full h-full opacity-30 overflow-hidden">
-                <div className="water-level w-full h-full" />
+        </div>
+        
+        {/* Main Content Area */}
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3 m-3 mb-20 overflow-hidden">
+          {/* 1. Hydration Dial - Top Left */}
+          <div className="border border-neon-blue/30 bg-black/40 backdrop-blur-sm rounded-lg p-4 shadow-neon-glow flex flex-col items-center justify-center">
+            <h2 className="text-neon-blue text-lg mb-2 uppercase font-bold tracking-wider">HYDRATION LEVEL</h2>
+            
+            {/* Circular Progress */}
+            <div className="relative w-40 h-40 my-2">
+              {/* Background Circle */}
+              <div className="absolute inset-0 rounded-full border-4 border-neon-blue/20"></div>
+              
+              {/* Progress Circle */}
+              <svg className="absolute inset-0 w-full h-full transform -rotate-90">
+                <circle
+                  cx="80"
+                  cy="80"
+                  r="70"
+                  fill="none"
+                  strokeWidth="8"
+                  stroke="#00E5FF"
+                  strokeLinecap="round"
+                  strokeDasharray={`${2 * Math.PI * 70}`}
+                  strokeDashoffset={`${2 * Math.PI * 70 * (1 - hydrationLevel / 100)}`}
+                  className="drop-shadow-[0_0_8px_rgba(0,229,255,0.8)]"
+                />
+              </svg>
+              
+              {/* Checkmark Icon */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-neon-blue text-4xl">
+                  ✓
+                </div>
+              </div>
+              
+              {/* Percentage Text */}
+              <div className="absolute inset-0 flex items-center justify-center mt-12">
+                <div className="text-white text-xl font-bold">
+                  {hydrationLevel}%
+                </div>
               </div>
             </div>
           </div>
-          
-          <div className="text-xs text-gray-400">
-            <span>{Math.round(hydrationLevel * 25)}ml / 2500 ml</span>
-            <span className="float-right text-neon-blue">Getting there!</span>
-          </div>
-        </motion.div>
 
-        {/* Today's Plan */}
-        <motion.div 
-          className="neon-card p-5 mb-6"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.3 }}
-        >
-          <h2 className="text-xl font-semibold mb-3">Today's Plan</h2>
-          <p className="text-sm text-gray-300 mb-3">
-            Drink 500ml water before noon. Consider an electrolyte beverage after your workout.
-          </p>
-          
-          <h3 className="text-sm font-semibold text-neon-blue mb-2">Recommended Drinks</h3>
-          
-          <div className="space-y-2">
-            {drinks.map((drink, index) => (
+          {/* 5. Live Card Stack - Center Section */}
+          <div className="overflow-y-auto max-h-full space-y-3">
+            {cards.map(card => (
               <motion.div 
-                key={drink.id}
-                className="flex items-center bg-white/5 rounded-lg p-3"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 + (index * 0.1) }}
+                key={card.id}
+                className="border border-neon-blue/30 bg-black/40 backdrop-blur-sm rounded-lg p-4 shadow-neon-glow"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: card.id * 0.1 }}
               >
-                <div className={`w-8 h-8 ${drink.color} bg-opacity-20 rounded-full flex items-center justify-center mr-3`}>
-                  <span>{drink.icon}</span>
-                </div>
-                <div>
-                  <h4 className="font-medium">{drink.type}</h4>
-                  <p className="text-xs text-gray-400">{drink.amount}</p>
-                </div>
-                <button 
-                  onClick={() => addDrink(drink.id)}
-                  className="ml-auto w-8 h-8 rounded-full bg-neon-blue/10 text-neon-blue flex items-center justify-center hover:bg-neon-blue/20 transition-colors"
-                >
-                  +
-                </button>
+                <h3 className="text-neon-blue font-bold mb-2">{card.title}</h3>
+                <p className="text-sm text-gray-300 mb-2">{card.content}</p>
+                
+                {card.hasQR && (
+                  <div className="bg-white w-24 h-24 mx-auto my-2 flex items-center justify-center">
+                    <span className="text-black text-xs">QR Code</span>
+                  </div>
+                )}
               </motion.div>
             ))}
           </div>
-        </motion.div>
 
-        {/* Environmental Impact */}
+          {/* 2 & 4. Chat & Video Avatar - Right Section */}
+          <div className="flex flex-col space-y-3">
+            {/* Chat/Responses Panel */}
+            <div className="border border-neon-blue/30 bg-black/40 backdrop-blur-sm rounded-lg shadow-neon-glow">
+              <div className="flex justify-between items-center p-3 border-b border-neon-blue/20">
+                <h2 className="text-neon-blue font-bold">CHAT</h2>
+                <button 
+                  onClick={() => setChatOpen(!chatOpen)}
+                  className="text-neon-blue"
+                >
+                  {chatOpen ? '▼' : '▶'}
+                </button>
+              </div>
+              
+              <AnimatePresence>
+                {chatOpen && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="h-36 overflow-y-auto p-3 space-y-2">
+                      {chatMessages.map((msg, idx) => (
+                        <div 
+                          key={idx} 
+                          className={`p-2 rounded-lg text-sm ${msg.sender === 'ai' 
+                            ? 'bg-neon-blue/10 mr-8' 
+                            : 'bg-white/10 ml-8 text-right'}`}
+                        >
+                          {msg.text}
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <div className="p-3 border-t border-neon-blue/20 flex">
+                      <input 
+                        type="text" 
+                        placeholder="Ask about your hydration..."
+                        className="bg-black/60 rounded-lg px-3 py-2 flex-1 text-sm border border-neon-blue/30"
+                        onKeyPress={(e) => e.key === 'Enter' && sendChatMessage(e.target.value)}
+                      />
+                      <button className="ml-2 bg-neon-blue/20 text-neon-blue px-3 py-2 rounded-lg text-sm">
+                        Send
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            
+            {/* Video Avatar */}
+            <div className="border border-neon-blue/30 bg-black/40 backdrop-blur-sm rounded-lg flex-1 shadow-neon-glow overflow-hidden">
+              <div className="p-3 border-b border-neon-blue/20">
+                <h2 className="text-neon-blue font-bold">VIDEO AVATAR</h2>
+              </div>
+              
+              <div className="p-4 flex flex-col items-center justify-center h-40">
+                {/* This would be a real video in production */}
+                <div className="w-20 h-20 rounded-full bg-neon-blue/20 border border-neon-blue/40 flex items-center justify-center mb-2">
+                  <svg viewBox="0 0 100 100" className="w-16 h-16 text-neon-blue">
+                    <circle cx="50" cy="40" r="20" fill="currentColor" opacity="0.7" />
+                    <path d="M50 70 Q 30 70 20 85 Q 50 95 80 85 Q 70 70 50 70" fill="currentColor" opacity="0.7" />
+                    <circle cx="40" cy="35" r="5" fill="white" />
+                    <circle cx="60" cy="35" r="5" fill="white" />
+                  </svg>
+                </div>
+                <p className="text-sm text-center">"Great job on staying hydrated today!"</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* 3. Log Intake Drawer - Left Button */}
         <motion.div 
-          className="neon-card p-5 mb-6"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.5 }}
+          className="fixed left-0 top-1/2 transform -translate-y-1/2"
+          initial={{ x: -5 }}
+          animate={{ x: logDrawerOpen ? 250 : -5 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         >
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">Carbon Savings</h2>
+          <button 
+            onClick={() => setLogDrawerOpen(!logDrawerOpen)}
+            className="bg-neon-blue text-black font-bold py-3 px-4 rounded-r-lg shadow-neon-glow flex items-center"
+          >
+            {logDrawerOpen ? '⇦' : '⇨'} LOG INTAKE
+          </button>
+        </motion.div>
+        
+        {/* Log Drawer Panel */}
+        <motion.div 
+          className="fixed left-0 top-0 bottom-0 w-64 bg-black/80 backdrop-blur-md border-r border-neon-blue/30 z-50 flex flex-col"
+          initial={{ x: -280 }}
+          animate={{ x: logDrawerOpen ? 0 : -280 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        >
+          <div className="p-4 border-b border-neon-blue/20">
+            <h2 className="text-xl font-bold text-neon-blue">Quick Log</h2>
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white/5 rounded-lg p-3 text-center">
-              <p className="text-neon-green text-xl font-bold">5.67 kg</p>
-              <p className="text-xs text-gray-400">CO₂ Saved</p>
+          <div className="p-4 flex-1 overflow-y-auto">
+            <div className="space-y-3">
+              {drinks.map(drink => (
+                <div 
+                  key={drink.id}
+                  className="flex items-center p-3 bg-neon-blue/10 rounded-lg"
+                >
+                  <div className={`w-10 h-10 ${drink.color} bg-opacity-20 rounded-full flex items-center justify-center mr-3`}>
+                    <span className="text-xl">{drink.icon}</span>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium">{drink.type}</h4>
+                    <p className="text-xs text-gray-400">{drink.amount}</p>
+                  </div>
+                  <button 
+                    onClick={() => logDrink(drink.id)}
+                    className="w-8 h-8 rounded-full bg-neon-blue/20 text-neon-blue flex items-center justify-center hover:bg-neon-blue/40 transition-colors"
+                  >
+                    +
+                  </button>
+                </div>
+              ))}
             </div>
             
-            <div className="bg-white/5 rounded-lg p-3 text-center">
-              <p className="text-neon-green text-xl font-bold">42</p>
-              <p className="text-xs text-gray-400">Bottles Avoided</p>
-            </div>
-            
-            <div className="col-span-2 bg-white/5 rounded-lg p-3 text-center">
-              <div className="flex items-center justify-center space-x-1">
-                <span className="text-neon-green">🌱</span>
-                <span className="text-neon-green">🌱</span>
-                <span className="text-neon-green">🌱</span>
-              </div>
-              <p className="text-xs text-gray-400 mt-1">Equivalent to planting 3 trees</p>
+            <div className="mt-6 p-3 bg-neon-blue/10 rounded-lg">
+              <h4 className="font-medium text-neon-blue mb-2">Scan Product</h4>
+              <button className="w-full py-2 bg-neon-blue/20 text-neon-blue rounded-lg flex items-center justify-center space-x-2">
+                <span>📷</span>
+                <span>Scan Barcode / QR</span>
+              </button>
             </div>
           </div>
         </motion.div>
-
-        {/* Action Button */}
-        <motion.button
-          className="neon-button w-full font-medium"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          Log Refill Station Visit
-        </motion.button>
+        
+        {/* 6. Bottom Navigation */}
+        <div className="fixed bottom-0 left-0 right-0 p-3">
+          <div className="mx-auto max-w-lg bg-black/60 backdrop-blur-md border border-neon-blue/30 rounded-full flex justify-around shadow-neon-glow">
+            {['Home', 'Timeline', 'Plans', 'Settings'].map(tab => {
+              const lowercaseTab = tab.toLowerCase();
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setCurrentTab(lowercaseTab)}
+                  className={`py-3 px-5 ${currentTab === lowercaseTab ? 'text-neon-blue font-bold' : 'text-gray-400'}`}
+                >
+                  {tab}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </main>
     </div>
   );
