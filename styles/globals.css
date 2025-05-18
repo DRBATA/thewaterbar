@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply bg-black text-white;
+  }
+  
+  body {
+    @apply min-h-screen bg-gradient-to-b from-[#001529] to-[#003145];
+  }
+}
+
+@layer components {
+  .neon-card {
+    @apply bg-neon-background backdrop-blur-md rounded-xl border border-neon-blue/20 shadow-neon-glow;
+  }
+  
+  .neon-text {
+    @apply text-neon-blue font-bold;
+  }
+  
+  .neon-button {
+    @apply bg-neon-blue/10 text-neon-blue border border-neon-blue/30 rounded-lg 
+           hover:bg-neon-blue/20 hover:shadow-neon-glow transition-all duration-300
+           text-center py-3 px-6 backdrop-blur-sm;
+  }
+  
+  .glass-panel {
+    @apply backdrop-blur-md bg-white/5 rounded-xl border border-white/10;
+  }
+  
+  .water-level {
+    @apply bg-gradient-to-b from-neon-blue to-neon-cyan rounded-b-lg animate-water-flow;
+  }
+}
